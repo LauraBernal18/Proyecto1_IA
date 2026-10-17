@@ -10,15 +10,15 @@ import heapq
 #---------------------------------------------------------------------
 
 LABERINTO = [
-    [0, 0, 0, 0, 3, 1, 0, 0, 0],
-    [0, 1, 1, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 1, 2, 0, 0, 1, 0],
-    [0, 1, 0, 1, 1, 1, 0, 0, 0],
-    [0, 1, 0, 0, 0, 1, 0, 1, 0],
-    [0, 1, 1, 1, 0, 1, 0, 1, 0],
-    [0, 0, 0, 1, 3, 0, 0, 1, 0],
-    [1, 1, 0, 1, 1, 1, 0, 1, 0],
-    [0, 0, 2, 0, 0, 0, 0, 0, 9]
+    [0, 0, 0, 0, 1, 2, 0, 0, 0],
+    [0, 0, 2, 0, 1, 1, 0, 0, 0],
+    [3, 0, 0, 1, 0, 0, 1, 0, 0],
+    [0, 3, 0, 0, 1, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0],
+    [1, 0, 0, 0, 0, 0, 1, 0, 0],
+    [1, 0, 0, 0, 1, 0, 0, 1, 1],
+    [0, 0, 0, 0, 0, 0, 0, 0, 9]
 ]
 
 INICIO = (0, 0)
@@ -210,7 +210,7 @@ def ejecutar_algoritmo(nombre):
         camino, expandidos = bfs_camino(grafo, INICIO, META)
     elif nombre == "DFS":
         camino, expandidos = dfs_camino(grafo, INICIO, META)
-    elif nombre == "UCS":
+    elif nombre == "BCU":
         camino, expandidos = ucs_camino(
             grafo, LABERINTO, INICIO, META
         )
@@ -254,7 +254,7 @@ class AplicacionLaberinto:
 
         descripcion = ttk.Label(
             ventana,
-            text="Selecciona BFS, DFS o UCS para encontrar una ruta."
+            text="Selecciona BFS, DFS o BCU para encontrar una ruta."
         )
         descripcion.pack(pady=4)
 
@@ -279,7 +279,7 @@ class AplicacionLaberinto:
         controles = ttk.Frame(ventana, padding=5)
         controles.pack()
 
-        for nombre in ("BFS", "DFS", "UCS"):
+        for nombre in ("BFS", "DFS", "BCU"):
             ttk.Button(
                 controles,
                 text=nombre,
