@@ -247,7 +247,7 @@ class AplicacionLaberinto:
 
         titulo = ttk.Label(
             ventana,
-            text="Laberinto: algoritmos de búsqueda",
+            text="Laberinto: algoritmos de busqueda",
             font=("Arial", 16, "bold")
         )
         titulo.pack(pady=(12, 4))
@@ -304,7 +304,7 @@ class AplicacionLaberinto:
             ventana,
             text=(
                 "Verde: inicio | Rojo: meta | Negro: muro\n"
-                "Azul: ruta | Amarillo: premio | Naranja: penalización"
+                "Azul: ruta | Amarillo: premio | Naranja: penalizacion"
             ),
             justify="center"
         )
