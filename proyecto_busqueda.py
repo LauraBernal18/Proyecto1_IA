@@ -239,7 +239,7 @@ def ejecutar_algoritmo(nombre):
 class AplicacionLaberinto:
     def __init__(self, ventana):
         self.ventana = ventana
-        self.ventana.title("Proyecto de busqueda en IA")
+        self.ventana.title("Proyecto de búsqueda en IA")
         self.ventana.resizable(False, False)
 
         self.botones_celdas = {}
@@ -247,7 +247,7 @@ class AplicacionLaberinto:
 
         titulo = ttk.Label(
             ventana,
-            text="Laberinto: algoritmos de busqueda",
+            text="Laberinto: algoritmos de búsqueda",
             font=("Arial", 16, "bold")
         )
         titulo.pack(pady=(12, 4))
@@ -304,7 +304,7 @@ class AplicacionLaberinto:
             ventana,
             text=(
                 "Verde: inicio | Rojo: meta | Negro: muro\n"
-                "Azul: ruta | Amarillo: premio | Naranja: penalizacion"
+                "Azul: ruta | Amarillo: premio | Naranja: penalización"
             ),
             justify="center"
         )
