@@ -5,13 +5,15 @@
 #   nim.py                    -> reglas del juego
 #   busqueda_no_informada.py  -> BFS, DFS, UCS
 #   astar.py                  -> A*        (pendiente)
-#   minimax.py                -> Minimax   (pendiente)
+#   busqueda_informada_minimax.py -> Minimax y poda alfa-beta
+#   interfaz_minimax.py       -> pestaña "Jugar contra la máquina"
 #   interfaz.py               -> ventana Tkinter
 
 import tkinter as tk
 
 from interfaz import AplicacionNim
 from busqueda_no_informada import bfs, dfs, ucs
+from interfaz_minimax import crear_pestana_minimax
 
 #cuando exista astar.py, descomentar esta linea:
 # from astar import astar
@@ -31,16 +33,8 @@ if __name__ == "__main__":
     ventana = tk.Tk()
     app = AplicacionNim(ventana, ALGORITMOS)
 
-    # Pestaña del modo de dos jugadores (Minimax).
-    # Cuando exista su interfaz, reemplazar el Label por su codigo, por ejemplo:
-    #     from interfaz_minimax import crear_pestana_minimax
-    #     crear_pestana_minimax(pestana_juego)
+    # Pestaña del modo de dos jugadores (Minimax / Alfa-beta).
     pestana_juego = app.agregar_pestana("Jugar contra la máquina")
-
-    tk.Label(
-        pestana_juego,
-        text="Modo de dos jugadores (Minimax): pendiente",
-        font=("Arial", 14)
-    ).pack(pady=80)
+    crear_pestana_minimax(pestana_juego)
 
     ventana.mainloop()
