@@ -1,5 +1,5 @@
 # ============================================================
-# BUSQUEDA ADVERSARIA: MINIMAX CON PODA ALFA-BETA (dos jugadores)
+# BUSQUEDA ADVERSARIA: MINIMAX Y PODA ALFA-BETA (dos jugadores)
 # ============================================================
 # Nim clasico: quien toma la ultima ficha gana.
 # Si a un jugador le toca mover y no quedan fichas, ese jugador perdio.
@@ -9,8 +9,9 @@
 # La poda alfa-beta es minimax que deja de explorar las ramas que no
 # pueden cambiar la decision: da el mismo resultado visitando menos nodos.
 #
-# alfabeta(estado, turno_max=True, profundidad_max=None, evaluar=evaluar_estado)
-# devuelve:
+# minimax(...) y alfabeta(...) tienen la misma interfaz:
+#   (estado, turno_max=True, profundidad_max=None, evaluar=evaluar_estado)
+# y devuelven:
 #   (mejor_movimiento, valor, nodos_visitados)
 # mejor_movimiento = (indice_del_monton, fichas_a_quitar), o None si el
 # estado ya es terminal.
@@ -56,6 +57,57 @@ def evaluar_estado(estado, turno_max):
 def se_alcanzo_limite(profundidad, profundidad_max):
 
     return profundidad_max is not None and profundidad >= profundidad_max
+
+
+# ============================================================
+# MINIMAX PURO
+# Recorre todo el arbol (hasta el limite de profundidad, si lo hay).
+
+def _valor_minimax(estado, turno_max, profundidad, profundidad_max,
+                   evaluar, contador):
+
+    contador["nodos"] += 1
+
+    if es_objetivo(estado):
+        return valor_terminal(turno_max)
+
+    if se_alcanzo_limite(profundidad, profundidad_max):
+        return evaluar(estado, turno_max)
+
+    valores = [
+        _valor_minimax(siguiente, not turno_max, profundidad + 1,
+                       profundidad_max, evaluar, contador)
+        for siguiente, movimiento in obtener_sucesores(estado)
+    ]
+
+    if turno_max:
+        return max(valores)
+    return min(valores)
+
+
+def minimax(estado, turno_max=True, profundidad_max=None,
+            evaluar=evaluar_estado):
+
+    # Contador local (no global) que comparten las llamadas recursivas.
+    contador = {"nodos": 1}
+
+    if es_objetivo(estado):
+        return None, valor_terminal(turno_max), contador["nodos"]
+
+    mejor_movimiento = None
+    mejor_valor = -INFINITO if turno_max else INFINITO
+
+    for siguiente, movimiento in obtener_sucesores(estado):
+        valor = _valor_minimax(siguiente, not turno_max, 1,
+                               profundidad_max, evaluar, contador)
+
+        # MAX busca el mayor valor, MIN el menor.
+        if (turno_max and valor > mejor_valor) or \
+           (not turno_max and valor < mejor_valor):
+            mejor_valor = valor
+            mejor_movimiento = movimiento
+
+    return mejor_movimiento, mejor_valor, contador["nodos"]
 
 
 # ============================================================
@@ -150,7 +202,7 @@ def aplicar_movimiento(estado, movimiento):
 # Prueba todos los estados con 'montones' montones de 0 a 'max_fichas'
 # fichas, sin limite de profundidad y con ambos jugadores en turno.
 # Devuelve (estados_probados, lista_de_errores).
-def verificar_contra_xor(montones=3, max_fichas=4):
+def verificar_contra_xor(algoritmo=alfabeta, montones=3, max_fichas=4):
 
     errores = []
     probados = 0
@@ -162,7 +214,7 @@ def verificar_contra_xor(montones=3, max_fichas=4):
 
         for turno_max in (True, False):
 
-            movimiento, valor, nodos = alfabeta(estado, turno_max)
+            movimiento, valor, nodos = algoritmo(estado, turno_max)
             probados += 1
 
             # Si el XOR es distinto de 0, gana el jugador que mueve.
@@ -191,27 +243,35 @@ def describir(movimiento):
 
 if __name__ == "__main__":
 
+    algoritmos = (("Minimax", minimax), ("Alfa-beta", alfabeta))
+
     # ---- 1. Sin limite de profundidad ----
-    for estado in ((2, 3, 4), ESTADO_INICIAL):
+    # El arbol completo de (3, 5, 7) tiene unos 40 millones de nodos,
+    # por eso minimax puro se compara con un estado mas chico.
+    estado = (2, 3, 4)
+    for nombre, algoritmo in algoritmos:
         t0 = time.perf_counter()
-        movimiento, valor, nodos = alfabeta(estado)
+        movimiento, valor, nodos = algoritmo(estado)
         milisegundos = (time.perf_counter() - t0) * 1000
-        print(f"Alfa-beta en {estado}: {describir(movimiento)}, "
+        print(f"{nombre:<10} en {estado}: {describir(movimiento)}, "
               f"valor {valor}, {nodos} nodos, {milisegundos:.2f} ms "
               f"(XOR = {nim_sum(estado)})")
 
     # ---- 2. Con limite de profundidad ----
     print()
     for limite in (2, 4):
-        movimiento, valor, nodos = alfabeta(ESTADO_INICIAL, True, limite)
-        print(f"Profundidad {limite}: {describir(movimiento)}, "
-              f"valor {valor}, {nodos} nodos")
+        for nombre, algoritmo in algoritmos:
+            movimiento, valor, nodos = algoritmo(ESTADO_INICIAL, True, limite)
+            print(f"{nombre:<10} profundidad {limite}: {describir(movimiento)}, "
+                  f"valor {valor}, {nodos} nodos")
 
     # ---- 3. Verificacion contra el XOR ----
     print()
-    probados, errores = verificar_contra_xor()
-    if errores:
-        print(f"{len(errores)} errores de {probados}. Primero: {errores[0]}")
-    else:
-        print(f"Correcto en {probados} posiciones "
-              f"(3 montones de 0 a 4 fichas, ambos turnos)")
+    for nombre, algoritmo in algoritmos:
+        probados, errores = verificar_contra_xor(algoritmo)
+        if errores:
+            print(f"{nombre}: {len(errores)} errores de {probados}. "
+                  f"Primero: {errores[0]}")
+        else:
+            print(f"{nombre}: correcto en {probados} posiciones "
+                  f"(3 montones de 0 a 4 fichas, ambos turnos)")
