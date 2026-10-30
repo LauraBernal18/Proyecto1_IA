@@ -1,5 +1,5 @@
 # ============================================================
-# INTERFAZ DEL MODO DE DOS JUGADORES (Minimax con poda alfa-beta)
+# INTERFAZ DEL MODO DE DOS JUGADORES (Minimax y poda alfa-beta)
 # ============================================================
 # Pestaña "Jugar contra la máquina".
 # La máquina es MAX y el humano es MIN.
@@ -34,6 +34,7 @@ from interfaz import (
     BASE_Y,
 )
 from busqueda_informada_minimax import (
+    minimax,
     alfabeta,
     nim_sum,
     aplicar_movimiento,
@@ -41,11 +42,19 @@ from busqueda_informada_minimax import (
 )
 
 
+ALGORITMOS_MINIMAX = {
+    "Alfa-beta": alfabeta,
+    "Minimax": minimax,
+}
+
 # Si el arbol completo del juego supera este numero de nodos y no hay
-# limite de profundidad, se pregunta antes de empezar, porque la ventana
+# limite de profundidad, se pregunta antes de buscar, porque la ventana
 # se queda congelada mientras la maquina piensa.
-# (Alfa-beta revisa mucho menos que el arbol completo, por eso es alto.)
-LIMITE_ARBOL = 60_000_000
+# (Alfa-beta revisa mucho menos que el arbol completo, por eso tolera mas.)
+LIMITE_ARBOL = {
+    "Alfa-beta": 60_000_000,
+    "Minimax": 2_000_000,
+}
 
 # Pausa antes de que mueva la maquina (ms), para ver la jugada del humano.
 PAUSA_MAQUINA = 600
@@ -72,22 +81,22 @@ def contar_nodos_arbol(estado, memo):
 
 # Pregunta si se quiere seguir cuando la busqueda puede tardar mucho.
 # Devuelve True si se puede buscar.
-def confirmar_busqueda(estado, profundidad_max):
+def confirmar_busqueda(nombre, estado, profundidad_max):
 
     if profundidad_max is not None:
         return True
 
     nodos = contar_nodos_arbol(estado, {})
 
-    if nodos <= LIMITE_ARBOL:
+    if nodos <= LIMITE_ARBOL[nombre]:
         return True
 
     return messagebox.askyesno(
         "Búsqueda lenta",
         f"El árbol completo de {estado} tiene {nodos:,} nodos.\n"
-        "Sin límite de profundidad la máquina puede tardar mucho "
+        f"{nombre} sin límite de profundidad puede tardar mucho "
         "y la ventana se quedará congelada.\n\n"
-        "Sugerencia: pon un límite de profundidad.\n\n"
+        "Sugerencia: usa Alfa-beta o pon un límite de profundidad.\n\n"
         "¿Continuar de todas formas?"
     )
 
@@ -105,6 +114,7 @@ class JuegoMinimax:
 
         self.estado = ESTADO_INICIAL
         self.turno = None          # HUMANO, MAQUINA o None si no hay partida
+        self.algoritmo = "Alfa-beta"
         self.profundidad_max = None
         self.resaltado = None
 
@@ -159,11 +169,22 @@ class JuegoMinimax:
         )
         self.boton_nueva.grid(row=0, column=4, padx=6, pady=2)
 
-        # ---- Fila 2: profundidad ----
+        # ---- Fila 2: algoritmo, profundidad y comparacion ----
+        tk.Label(marco, text="Algoritmo:").grid(row=1, column=0, sticky="e")
+
+        self.selector_algoritmo = ttk.Combobox(
+            marco,
+            values=list(ALGORITMOS_MINIMAX),
+            state="readonly",
+            width=13
+        )
+        self.selector_algoritmo.set("Alfa-beta")
+        self.selector_algoritmo.grid(row=1, column=1, padx=5, pady=2)
+
         tk.Label(
             marco,
             text="Profundidad máx. (0 = sin límite):"
-        ).grid(row=1, column=0, columnspan=2, sticky="e")
+        ).grid(row=1, column=2, sticky="e")
 
         self.selector_profundidad = tk.Spinbox(
             marco,
@@ -172,7 +193,13 @@ class JuegoMinimax:
             width=5,
             justify="center"
         )
-        self.selector_profundidad.grid(row=1, column=2, sticky="w", padx=5, pady=2)
+        self.selector_profundidad.grid(row=1, column=3, sticky="w", padx=5, pady=2)
+
+        # Minimax vs Alfa-beta en el estado actual (resultado en el historial).
+        self.boton_comparar = self.crear_boton(
+            marco, "Comparar", self.comparar
+        )
+        self.boton_comparar.grid(row=1, column=4, padx=6, pady=2)
 
     def crear_boton(self, padre, texto, comando):
 
@@ -198,9 +225,12 @@ class JuegoMinimax:
         self.entrada.config(state=estado_widget)
         self.selector_profundidad.config(state=estado_widget)
         self.boton_nueva.config(state=estado_widget)
-        self.selector_inicio.config(
-            state="disabled" if bloquear else "readonly"
-        )
+        self.boton_comparar.config(state=estado_widget)
+
+        estado_selector = "disabled" if bloquear else "readonly"
+        self.selector_inicio.config(state=estado_selector)
+        self.selector_algoritmo.config(state=estado_selector)
+
         self.lienzo.config(cursor="watch" if bloquear else "hand2")
 
     # --------------------------------------------------------
@@ -233,7 +263,7 @@ class JuegoMinimax:
 
         marco_analisis = tk.LabelFrame(
             self.padre,
-            text="Análisis de la máquina (alfa-beta)",
+            text="Análisis de la máquina",
             font=("Arial", 11, "bold"),
             padx=10,
             pady=4
@@ -381,13 +411,16 @@ class JuegoMinimax:
             )
             return
 
+        algoritmo = self.selector_algoritmo.get()
+
         # El arbol solo se achica durante la partida: basta revisar el inicio.
-        if not confirmar_busqueda(estado, profundidad_max):
+        if not confirmar_busqueda(algoritmo, estado, profundidad_max):
             return
 
         self.cancelar_pendiente()
 
         self.estado = estado
+        self.algoritmo = algoritmo
         self.profundidad_max = profundidad_max
 
         self.dibujar_montones(self.estado)
@@ -396,7 +429,7 @@ class JuegoMinimax:
 
         limite = "sin límite" if profundidad_max is None else profundidad_max
         self.agregar_historial(
-            f"Nueva partida: {estado} | alfa-beta, profundidad {limite}"
+            f"Nueva partida: {estado} | {algoritmo}, profundidad {limite}"
         )
 
         if self.selector_inicio.get() == MAQUINA:
@@ -489,9 +522,10 @@ class JuegoMinimax:
 
         self.pendiente = None
         estado_antes = self.estado
+        algoritmo = ALGORITMOS_MINIMAX[self.algoritmo]
 
         t0 = time.perf_counter()
-        movimiento, valor, nodos = alfabeta(
+        movimiento, valor, nodos = algoritmo(
             estado_antes, True, self.profundidad_max
         )
         milisegundos = (time.perf_counter() - t0) * 1000
@@ -513,6 +547,7 @@ class JuegoMinimax:
 
         self.etiqueta_analisis.config(
             text=(
+                f"Algoritmo: {self.algoritmo}    "
                 f"Nodos visitados: {nodos}    "
                 f"Tiempo: {milisegundos:.1f} ms\n"
                 f"Jugada: {describir(movimiento)}    "
@@ -533,3 +568,54 @@ class JuegoMinimax:
             return
 
         self.dar_turno_humano()
+
+    # --------------------------------------------------------
+    # COMPARAR MINIMAX vs ALFA-BETA EN EL ESTADO ACTUAL
+    # --------------------------------------------------------
+    def comparar(self):
+
+        try:
+            profundidad_max = self.leer_profundidad()
+
+            # Sin partida en curso se usa el estado escrito en la caja.
+            estado = self.estado
+            if self.turno is None:
+                estado = leer_estado(self.entrada.get())
+
+        except ValueError as error:
+            messagebox.showerror("Entrada incorrecta", str(error))
+            return
+
+        if es_objetivo(estado):
+            messagebox.showinfo("Comparar", "No quedan fichas.")
+            return
+
+        if not confirmar_busqueda("Minimax", estado, profundidad_max):
+            return
+
+        # La ventana se congela durante la comparacion: mismo bloqueo que
+        # en el turno de la maquina, para no aceptar clics en ese tiempo.
+        turno_anterior = self.turno
+        self.turno = None
+        self.bloquear_controles(True)
+        self.padre.update_idletasks()
+
+        limite = "sin límite" if profundidad_max is None else profundidad_max
+        self.agregar_historial(
+            f"Comparación en {estado}, mueve MAX, profundidad {limite}"
+        )
+
+        for nombre, algoritmo in ALGORITMOS_MINIMAX.items():
+            t0 = time.perf_counter()
+            movimiento, valor, nodos = algoritmo(estado, True, profundidad_max)
+            milisegundos = (time.perf_counter() - t0) * 1000
+
+            self.agregar_historial(
+                f"  {nombre:<10} {describir(movimiento):<26} valor {valor:<3}"
+                f"{nodos:>10} nodos {milisegundos:>9.1f} ms"
+            )
+
+        # Descarta los clics que quedaron en cola antes de devolver el control.
+        self.padre.update()
+        self.turno = turno_anterior
+        self.bloquear_controles(False)
