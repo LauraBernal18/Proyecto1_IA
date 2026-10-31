@@ -20,6 +20,7 @@ Implementación y comparación de algoritmos de búsqueda informada y no informa
 - [Algoritmos implementados](#algoritmos-implementados)
 - [Uso de la interfaz](#uso-de-la-interfaz)
 - [Pruebas rápidas por consola](#pruebas-rápidas-por-consola)
+- [Experimentos y métricas](#experimentos-y-métricas)
 
 ---
 
@@ -65,15 +66,15 @@ Los comandos deben ejecutarse desde esa carpeta, porque los módulos se importan
 
 ## Estructura del proyecto
 
-| Archivo | Descripción |
-|---|---|
-| `main.py` | Punto de entrada. Registra los algoritmos y abre la ventana. |
-| `nim.py` | Reglas del juego: estado inicial, sucesores, prueba de meta, costo de los movimientos y validación de la entrada. |
-| `busqueda_no_informada.py` | BFS, DFS, UCS y `reconstruir_solucion`. |
-| `astar.py` | A\* con dos heurísticas (`h_fichas` y `h_montones`). |
-| `busqueda_informada_minimax.py` | Minimax, poda alfa-beta, función de evaluación y verificación contra la solución matemática (XOR). |
-| `interfaz.py` | Ventana principal en Tkinter: entrada de montones, botones de algoritmos, animación, resultados y tabla comparativa. |
-| `interfaz_minimax.py` | Pestaña del modo de dos jugadores. |
+| Archivo                         | Descripción                                                                                                          |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `main.py`                       | Punto de entrada. Registra los algoritmos y abre la ventana.                                                         |
+| `nim.py`                        | Reglas del juego: estado inicial, sucesores, prueba de meta, costo de los movimientos y validación de la entrada.    |
+| `busqueda_no_informada.py`      | BFS, DFS, UCS y `reconstruir_solucion`.                                                                              |
+| `astar.py`                      | A\* con dos heurísticas (`h_fichas` y `h_montones`).                                                                 |
+| `busqueda_informada_minimax.py` | Minimax, poda alfa-beta, función de evaluación y verificación contra la solución matemática (XOR).                   |
+| `interfaz.py`                   | Ventana principal en Tkinter: entrada de montones, botones de algoritmos, animación, resultados y tabla comparativa. |
+| `interfaz_minimax.py`           | Pestaña del modo de dos jugadores.                                                                                   |
 
 ## Modelado del problema
 
@@ -165,3 +166,25 @@ Alfa-beta  profundidad 4: quitar 1 del monton 1, valor 0, 552 nodos
 Minimax: correcto en 248 posiciones (3 montones de 0 a 4 fichas, ambos turnos)
 Alfa-beta: correcto en 248 posiciones (3 montones de 0 a 4 fichas, ambos turnos)
 ```
+
+## Experimentos y métricas
+
+El script `experimentos.py` ejecuta mediciones que no modifican los algoritmos, ahora, para correrlo desde la carpeta del proyecto:
+
+```bash
+python experimentos.py
+```
+
+El programa mide BFS, DFS, UCS y A\* con las heurísticas `h_fichas` y `h_montones` en los estados que se definen en `CASOS_BUSQUEDA`
+
+También compara Minimax sin poda y con alfa-beta bajo los mismos estados y límites de profundidad definidos en `CASOS_MINIMAX`.
+
+Se registra movimientos, costo, estados expandidos, tiempo y memoria como se solicitó. Para Minimax registra la jugada, su valor, los nodos visitados, el tiempo, la memoria y la reducción en porcentajes de nodos de alfa-beta respecto a Minimax sin poda, cada algoritmo se midió varias veces para que resultados aislados no afecten la comparación. Por un lado 20 veces la medición de tiempo y 10 veces la de memoria, se usó la mediana como valor representativo.
+
+La memoria se mide con `tracemalloc` y representa el pico de asignaciones en este caso de Python que fueron rastreadas, no la memoria total del proceso para no afectar la métrica con factores externos.
+
+Al finalizar, el script crea la carpeta `resultados_experimentos`
+
+Los archivos CSV se pueden abrir con Excel o herramientas parecidas, de igual forma las ejecuciones para este proyecto están disponibles en el repositorio como prueba de realización y dentro del informe explicando las diferencias.
+
+Si se cambian los casos o las cantidades de repeticiones en `experimentos.py`, hay que volver a ejecutar el script para actualizar los resultados dentro de los CSV.
