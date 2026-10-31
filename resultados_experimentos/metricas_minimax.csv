@@ -1,0 +1,9 @@
+﻿estado,algoritmo,profundidad,mejor_jugada,valor,nodos_visitados,tiempo_mediana_ms,tiempo_minimo_ms,tiempo_maximo_ms,memoria_pico_mediana_kib,repeticiones_tiempo,repeticiones_memoria,reduccion_nodos_pct
+"(2, 3, 4)",Minimax sin poda,completa,quitar 3 del monton 3,1,20652,16.2963,14.5936,20.2823,1.7421875,20,10,
+"(2, 3, 4)",Alfa-beta,completa,quitar 3 del monton 3,1,6018,4.90605,3.6887,8.3965,1.046875,20,10,70.9
+"(3, 4, 5)",Minimax sin poda,completa,quitar 2 del monton 1,1,1038768,820.2668,694.4659,1275.0652,2.7265625,20,10,
+"(3, 4, 5)",Alfa-beta,completa,quitar 2 del monton 1,1,33916,32.0822,24.8948,44.559,1.7734375,20,10,96.7
+"(3, 5, 7)",Minimax sin poda,6,quitar 1 del monton 1,0,320348,291.24115,243.5362,450.8773,2.09375,20,10,
+"(3, 5, 7)",Alfa-beta,6,quitar 1 del monton 1,0,9423,11.13825,8.3452,30.9708,1.46875,20,10,97.1
+"(3, 5, 7)",Minimax sin poda,4,quitar 1 del monton 1,0,12766,11.14855,9.0987,81.6931,1.625,20,10,
+"(3, 5, 7)",Alfa-beta,4,quitar 1 del monton 1,0,552,0.62615,0.5603,3.6563,1.09765625,20,10,95.7
