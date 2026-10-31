@@ -98,7 +98,7 @@ class AplicacionNim:
 
         tk.Label(
             encabezado,
-            text="Inteligencia Artificial · Búsqueda informada y no informada · Proyecto 1",
+            text="Inteligencia Artificial - Algoritmos de búsqueda y teoría de juegos - Proyecto 1",
             font=("Arial", 10),
             bg=COLOR_FONDO,
             fg="#A8B2D1"
@@ -463,6 +463,7 @@ class AplicacionNim:
         estados, movimientos, expandidos = algoritmo(inicio)
         milisegundos = (time.perf_counter() - t0) * 1000
         return estados, movimientos, expandidos, milisegundos
+
 
     def ejecutar_algoritmo(self, nombre):
 
